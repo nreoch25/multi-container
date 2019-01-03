@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t nreoch9/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run nreoch9/react-test npm test -- --coverage
+
+after_success:
+  # Build images
+  - docker build -t nreoch9/multi-client ./client
+  - docker build -t nreoch9/multi-nginx ./nginx
+  - docker build -t nreoch9/multi-server ./server
+  - docker build -t nreoch9/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push nreoch9/multi-client
+  - docker push nreoch9/multi-nginx
+  - docker push nreoch9/multi-server
+  - docker push nreoch9/multi-worker
